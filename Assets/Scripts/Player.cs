@@ -13,9 +13,10 @@ public class Player : MonoBehaviour
     [HideInInspector]
     public Vector3 startingPosition;
 
-    public int speed = 5;
+    public float minSpeed = 5.0f;
+    public float maxSpeed = 6.5f;
     [HideInInspector]
-    public int currentSpeed = 5;
+    public float currentSpeed = 5;
 
     public float sideBound = 1.77f;
     public float axisSensitivity = 1f;
@@ -25,8 +26,8 @@ public class Player : MonoBehaviour
     private Vector3[] subCubePositions;
     private Rigidbody[] subCubeRbs;
     private BoxCollider[] subCubeBcs;
-    public List<int> shedCubeHistory;
-
+    private List<int> shedCubeHistory;
+    private TrailRenderer trailRenderer;
     private void Awake()
     {
         startingPosition = transform.position;
@@ -48,7 +49,10 @@ public class Player : MonoBehaviour
     {
         if (!rb) rb = GetComponent<Rigidbody>();
         if (!boxCollider) boxCollider = GetComponent<BoxCollider>();
-        currentSpeed = speed;
+        if (!trailRenderer) trailRenderer = GetComponent<TrailRenderer>();
+        currentSpeed = minSpeed;
+        trailRenderer.emitting = false;
+        Invoke("setTrailRenderer", 1);
         rb.isKinematic = false;
         rb.useGravity = false;
         rb.velocity = Vector3.zero;
@@ -63,6 +67,12 @@ public class Player : MonoBehaviour
             subCubeBcs[i].enabled = false;
         }
         shedCubeHistory = new List<int>();
+        
+    }
+
+    void setTrailRenderer()
+    {
+        trailRenderer.emitting = true;
     }
 
     private void Update()
@@ -70,6 +80,16 @@ public class Player : MonoBehaviour
         if (UIManager.Instance.currentScreen == GameScreen.Start)
             return;
         rb.velocity = Vector3.Lerp(rb.velocity, transform.forward * currentSpeed, Time.deltaTime * 2);
+        //Should not increment speed value when the player has completed level
+        //for example, when the stopping force has been applied on player cube
+        if (currentSpeed > minSpeed)
+        {
+            //Interpolation of cube speed from minimum speed to maximum speed based on level progress
+            float x = 1 - (LevelManager.Instance.levelEndGO.transform.position.z - transform.position.z) / (LevelManager.Instance.levelEndGO.transform.position.z - startingPosition.z);
+            x *= (maxSpeed - minSpeed);
+            x += minSpeed;
+            currentSpeed = x;
+        }
         if (Application.platform == RuntimePlatform.WindowsEditor)
         {
             transform.position = new Vector3(
