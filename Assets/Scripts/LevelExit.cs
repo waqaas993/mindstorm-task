@@ -3,6 +3,7 @@
 public class LevelExit : MonoBehaviour
 {
     private Player player;
+    private CameraScript cameraScript;
     public bool firstDoor;
     public int stoppingPower;
     private bool isGlass;
@@ -13,7 +14,7 @@ public class LevelExit : MonoBehaviour
 
     private void Awake()
     {
-        
+        cameraScript = FindObjectOfType<CameraScript>();
     }
 
     private void Update()
@@ -46,6 +47,7 @@ public class LevelExit : MonoBehaviour
             {
                 if (UIManager.Instance.currentScreen != GameScreen.End)
                 {
+                    SoundManager.Instance.playAudio(AudioType.levelCleared);
                     UIManager.Instance.levelEndReason.text = "LEVEL CLEARED!";
                     UIManager.Instance.screenFlyIn(GameScreen.End, 0.25f);
                     LevelManager.Instance.LevelCleared();
@@ -63,6 +65,7 @@ public class LevelExit : MonoBehaviour
             {
                 Handheld.Vibrate();
                 SoundManager.Instance.playAudio(AudioType.bump);
+                cameraScript.Shake();
                 player.killMe();
             }
         }

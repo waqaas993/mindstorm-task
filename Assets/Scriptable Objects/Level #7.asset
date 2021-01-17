@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3c8e2ab73090520428c5965bab53f9e1, type: 3}
-  m_Name: Level #1
+  m_Name: Level #7
   m_EditorClassIdentifier: 
-  target: 10
-  movingGlass: 10
-  glassMovementSpeed: 1
-  staticGlass: 10
-  pole: 10
-  distanceBetweenObstacles: 3
+  target: 13
+  movingGlass: 15
+  glassMovementSpeed: 1.3
+  staticGlass: 8
+  pole: 16
+  distanceBetweenObstacles: 2.7

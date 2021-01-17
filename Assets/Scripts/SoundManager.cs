@@ -3,13 +3,17 @@
 public enum AudioType
 {
     glassBreak,
-    bump
+    bump,
+    levelCleared,
+    levelFailed
 }
 
 public class SoundManager : MonoBehaviour
 {
     public AudioClip glassBreak;
     public AudioClip bump;
+    public AudioClip levelCleared;
+    public AudioClip levelFailed;
     public AudioSource audioSource;
     public AudioSource backgroundAudioSource;
 
@@ -24,6 +28,9 @@ public class SoundManager : MonoBehaviour
 
     public void playAudio(AudioType audioType)
     {
+        if (audioSource.clip == levelCleared)
+            if (audioSource.isPlaying)
+                return;
         switch (audioType)
         {
             case AudioType.glassBreak:
@@ -31,6 +38,12 @@ public class SoundManager : MonoBehaviour
                 break;
             case AudioType.bump:
                 audioSource.clip = bump;
+                break;
+            case AudioType.levelCleared:
+                audioSource.clip = levelCleared;
+                break;
+            case AudioType.levelFailed:
+                audioSource.clip = levelFailed;
                 break;
             default:
                 break;

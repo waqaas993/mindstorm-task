@@ -5,8 +5,9 @@ public class LevelManager : MonoBehaviour
     public Levels[] levels;
     public Transform[] lanes;
 
-    private ObstaclePool glassPool;
-    private ObstaclePool polePool;
+    private ObjectPool glassPool;
+    private ObjectPool polePool;
+    private ObjectPool explosionCubePool;
 
     public GameObject levelEndPrefab;
     [HideInInspector]
@@ -34,12 +35,14 @@ public class LevelManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        foreach (ObstaclePool obstaclePool in FindObjectsOfType<ObstaclePool>())
+        foreach (ObjectPool objectPool in FindObjectsOfType<ObjectPool>())
         {
-            if (obstaclePool.obstacleType == ObstacleType.Glass)
-                glassPool = obstaclePool;
-            if (obstaclePool.obstacleType == ObstacleType.Pole)
-                polePool = obstaclePool;
+            if (objectPool.poolType == PoolType.Glass)
+                glassPool = objectPool;
+            if (objectPool.poolType == PoolType.Pole)
+                polePool = objectPool;
+            if (objectPool.poolType == PoolType.ExplosionCube)
+                explosionCubePool = objectPool;
         }
         StartGameplay();
     }
@@ -68,8 +71,9 @@ public class LevelManager : MonoBehaviour
 
     void generateLevel()
     {
-        glassPool.disableAll();
-        polePool.disableAll();
+        if (glassPool) glassPool.disableAll();
+        if (polePool) polePool.disableAll();
+        if (explosionCubePool) explosionCubePool.disableAll();
         float lastSpawnedZ = player.startingPosition.z + distanceBetweenObstacles * 4;
         Vector3 positionToSpawnAt;
         do
@@ -120,7 +124,9 @@ public class LevelManager : MonoBehaviour
 
     public void LevelCleared()
     {
-        if (currentLevel > levels.Length)
+        Debug.Log("currentLevel " + currentLevel);
+        Debug.Log("levels.Length " + levels.Length);
+        if (levels.Length > currentLevel)
         {
             InGameData.Instance.playerData.levelsUnlocked = currentLevel + 1;
             LocalSave.Instance.SaveData();

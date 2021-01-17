@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class CameraScript : MonoBehaviour
 {
@@ -11,12 +12,12 @@ public class CameraScript : MonoBehaviour
     private Player player;
     public bool shake;
     public float shakeAmount;
+    public float shakeDuration;
     private Vector3 targetPosition;
 
     private void Awake()
     {
         Instance = this;
-        Application.targetFrameRate = 60;
     }
 
     private void Update()
@@ -31,4 +32,16 @@ public class CameraScript : MonoBehaviour
         }
         transform.position = targetPosition;
     }
+
+    public void Shake()
+    {
+        shake = true;
+        Invoke("stopShake", shakeDuration);
+    }
+
+    void stopShake()
+    {
+        shake = false;
+    }
+
 }

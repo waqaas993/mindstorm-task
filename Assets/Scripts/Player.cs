@@ -67,8 +67,8 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        //if (UIManager.Instance.currentScreen != GameScreen.Gameplay)
-        //    return;
+        if (UIManager.Instance.currentScreen == GameScreen.Start)
+            return;
         rb.velocity = Vector3.Lerp(rb.velocity, transform.forward * currentSpeed, Time.deltaTime * 2);
         if (Application.platform == RuntimePlatform.WindowsEditor)
         {
@@ -113,7 +113,8 @@ public class Player : MonoBehaviour
         subCubes[i].transform.SetParent(null);
         subCubeRbs[i].isKinematic = false;
         subCubeBcs[i].enabled = true;
-        subCubeRbs[i].AddForce(new Vector3(Random.Range(0.0f, 1.0f), 1, Random.Range(0.0f, 1.0f)) * 5, ForceMode.Impulse);
+        Vector3 unitDir = Random.insideUnitSphere;
+        subCubeRbs[i].AddForce(new Vector3(unitDir.x, 1, unitDir.z) * 5, ForceMode.Impulse);
     }
 
     public void shedCube()
@@ -145,6 +146,7 @@ public class Player : MonoBehaviour
                 explodeCube(i);
         if (UIManager.Instance.currentScreen != GameScreen.End)
         {
+            SoundManager.Instance.playAudio(AudioType.levelCleared);
             UIManager.Instance.levelEndReason.text = "TRY AGAIN!";
             UIManager.Instance.screenFlyIn(GameScreen.End, 0.25f);
         }

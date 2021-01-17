@@ -32,6 +32,8 @@ public class UIManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        Application.targetFrameRate = 60;
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
         currentScreen = GameScreen.Start;
     }
 
@@ -76,18 +78,33 @@ public class UIManager : MonoBehaviour
                     Time.deltaTime * 3);
                 break;
             case GameScreen.End:
-                if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0
-                    || Input.touchCount > 0)
+                if (Application.platform == RuntimePlatform.WindowsEditor)
                 {
-                    screens[(int)GameScreen.End].gameObject.SetActive(false);
-                    currentScreen = GameScreen.Start;
-                    LevelManager.Instance.StartGameplay();
+                    if (Input.anyKey)
+                        toStartScreen();
+                }
+                else if (Application.platform == RuntimePlatform.Android)
+                {
+                    if (Input.touchCount > 0)
+                    {
+                        Touch touch = Input.GetTouch(0);
+                        if (touch.phase == TouchPhase.Began)
+                            toStartScreen();
+                    }
                 }
                 break;
             default:
                 break;
         }
     }
+
+    void toStartScreen()
+    {
+        screens[(int)GameScreen.End].gameObject.SetActive(false);
+        currentScreen = GameScreen.Start;
+        LevelManager.Instance.StartGameplay();
+    }
+
 
     public void screenFlyIn(GameScreen screen, float tweenTime)
     {
@@ -96,5 +113,14 @@ public class UIManager : MonoBehaviour
             screens[(int)currentScreen].gameObject.SetActive(true);
         screens[(int)currentScreen].GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 2000);
         screens[(int)currentScreen].GetComponent<RectTransform>().DOAnchorPos(Vector2.zero, tweenTime);
+    }
+
+    public void OnClickRetry()
+    {
+        toStartScreen();
+    }
+    public void OnClickQuit()
+    {
+        Application.Quit();
     }
 }

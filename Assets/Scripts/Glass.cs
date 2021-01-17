@@ -7,13 +7,21 @@ public class Glass : MonoBehaviour
     private float randomSeed;
 
     private Player player;
-
-    public ObstaclePool obstaclePool;
+    private ObjectPool explosionCubePool;
+    public int explosionCubeAmount;
 
     // Start is called before the first frame update
     void Awake()
     {
         randomSeed = Random.Range(0.0f, sideBound*2.0f);
+        foreach (ObjectPool objectPool in FindObjectsOfType<ObjectPool>())
+        {
+            if (objectPool.poolType == PoolType.ExplosionCube)
+            {
+                explosionCubePool = objectPool;
+                break;
+            }
+        }
     }
 
     // Update is called once per frame
@@ -32,6 +40,8 @@ public class Glass : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            for (int i = 0; i < explosionCubeAmount; i++)
+                explosionCubePool.spawnObject(transform.position, 0, 1);
             if (!player)
                 player = other.GetComponent<Player>();
             UIManager.Instance.tweenScoreFeedback();
