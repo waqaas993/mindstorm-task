@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
@@ -10,11 +8,23 @@ public class LevelManager : MonoBehaviour
     private ObstaclePool glassPool;
     private ObstaclePool polePool;
 
+    public GameObject levelEndPrefab;
+    [HideInInspector]
+    public GameObject levelEndGO;
+
+    [HideInInspector]
+    public int currentLevel;
+    [HideInInspector]
     public int target;
+    [HideInInspector]
     public int movingGlass;
+    [HideInInspector]
     public float glassMovementSpeed;
+    [HideInInspector]
     public int staticGlass;
+    [HideInInspector]
     public int pole;
+    [HideInInspector]
     public float distanceBetweenObstacles;
 
     private Player player;
@@ -31,28 +41,36 @@ public class LevelManager : MonoBehaviour
             if (obstaclePool.obstacleType == ObstacleType.Pole)
                 polePool = obstaclePool;
         }
+        StartGameplay();
+    }
+
+    public void StartGameplay()
+    {
+        if (!player)
+            player = FindObjectOfType<Player>();
         setLevel(InGameData.Instance.playerData.levelsUnlocked);
         generateLevel();
+        ColorPalateManager.Instance.StartGameplay();
+        player.StartGameplay();
+        UIManager.Instance.StartGameplay(InGameData.Instance.playerData.levelsUnlocked);
     }
 
     public void setLevel(int level)
     {
-        target = levels[level - 1].target;
-        movingGlass = levels[level - 1].movingGlass;
-        glassMovementSpeed = levels[level - 1].glassMovementSpeed;
-        staticGlass = levels[level - 1].staticGlass;
-        pole = levels[level - 1].pole;
-        distanceBetweenObstacles = levels[level - 1].distanceBetweenObstacles;
+        currentLevel = level;
+        target = levels[currentLevel - 1].target;
+        movingGlass = levels[currentLevel - 1].movingGlass;
+        glassMovementSpeed = levels[currentLevel - 1].glassMovementSpeed;
+        staticGlass = levels[currentLevel - 1].staticGlass;
+        pole = levels[currentLevel - 1].pole;
+        distanceBetweenObstacles = levels[currentLevel - 1].distanceBetweenObstacles;
     }
-
 
     void generateLevel()
     {
         glassPool.disableAll();
         polePool.disableAll();
-        if (!player)
-            player = FindObjectOfType<Player>();
-        float lastSpawnedZ = player.transform.position.z;
+        float lastSpawnedZ = player.startingPosition.z + distanceBetweenObstacles * 4;
         Vector3 positionToSpawnAt;
         do
         {
@@ -90,5 +108,22 @@ public class LevelManager : MonoBehaviour
                     break;
             }
         } while (movingGlass > 0 || staticGlass > 0 || pole > 0);
+
+        //Spawn Level exit
+        if (!levelEndGO)
+            levelEndGO = Instantiate(levelEndPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        levelEndGO.transform.position = new Vector3(0, 1, lastSpawnedZ + distanceBetweenObstacles * 4);
+        foreach (Transform child in levelEndGO.transform)
+            if (!child.gameObject.activeSelf)
+                child.gameObject.SetActive(true);
+    }
+
+    public void LevelCleared()
+    {
+        if (currentLevel > levels.Length)
+        {
+            InGameData.Instance.playerData.levelsUnlocked = currentLevel + 1;
+            LocalSave.Instance.SaveData();
+        }
     }
 }

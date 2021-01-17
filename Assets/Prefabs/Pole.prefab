@@ -64,7 +64,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f48d0a838a493f41a81f3a158c2432d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bumpForce: 18
+  bumpForce: 10
+  obstaclePool: {fileID: 0}
 --- !u!1 &9118125519298747134
 GameObject:
   m_ObjectHideFlags: 0

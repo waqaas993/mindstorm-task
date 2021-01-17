@@ -9,6 +9,9 @@ public class CameraScript : MonoBehaviour
     public float offsetZ;
 
     private Player player;
+    public bool shake;
+    public float shakeAmount;
+    private Vector3 targetPosition;
 
     private void Awake()
     {
@@ -20,6 +23,12 @@ public class CameraScript : MonoBehaviour
     {
         if (!player) player = FindObjectOfType<Player>();
         transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(rotation, 0f, 0f), Time.deltaTime * 2f);
-        transform.position = new Vector3(0, height, player.transform.position.z - offsetZ);
+        targetPosition = new Vector3(0, height, player.transform.position.z - offsetZ); ;
+        if (shake)
+        {
+            Vector3 shakeVector = targetPosition + Random.insideUnitSphere * shakeAmount;
+            targetPosition = new Vector3(shakeVector.x, height, shakeVector.z);
+        }
+        transform.position = targetPosition;
     }
 }

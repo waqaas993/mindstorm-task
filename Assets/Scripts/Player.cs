@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
@@ -9,16 +10,37 @@ public class Player : MonoBehaviour
     [HideInInspector]
     public Rigidbody rb;
     private BoxCollider boxCollider;
-    private Vector3 startingPosition;
+    [HideInInspector]
+    public Vector3 startingPosition;
 
     public int speed = 5;
+    [HideInInspector]
+    public int currentSpeed = 5;
+
     public float sideBound = 1.77f;
     public float axisSensitivity = 1f;
     public float touchMoveSensitivity = 0.01f;
 
+    public GameObject[] subCubes;
+    private Vector3[] subCubePositions;
+    private Rigidbody[] subCubeRbs;
+    private BoxCollider[] subCubeBcs;
+    public List<int> shedCubeHistory;
+
     private void Awake()
     {
         startingPosition = transform.position;
+        subCubePositions = new Vector3[subCubes.Length];
+        subCubeRbs = new Rigidbody[subCubes.Length];
+        subCubeBcs = new BoxCollider[subCubes.Length];
+        for (int i = 0; i < subCubes.Length; i++)
+        {
+            subCubePositions[i] = subCubes[i].transform.localPosition;
+            subCubeRbs[i] = subCubes[i].AddComponent<Rigidbody>();
+            subCubeRbs[i].isKinematic = true;
+            subCubeBcs[i] = subCubes[i].AddComponent<BoxCollider>();
+            subCubeBcs[i].enabled = false;
+        } 
         StartGameplay();
     }
 
@@ -26,17 +48,28 @@ public class Player : MonoBehaviour
     {
         if (!rb) rb = GetComponent<Rigidbody>();
         if (!boxCollider) boxCollider = GetComponent<BoxCollider>();
+        currentSpeed = speed;
+        rb.isKinematic = false;
         rb.useGravity = false;
         rb.velocity = Vector3.zero;
         transform.position = startingPosition;
         transform.rotation = Quaternion.identity;
+        for (int i = 0; i < subCubes.Length; i++)
+        {
+            subCubes[i].transform.SetParent(transform);
+            subCubes[i].transform.localPosition = subCubePositions[i];
+            subCubes[i].transform.localRotation = Quaternion.identity;
+            subCubeRbs[i].isKinematic = true;
+            subCubeBcs[i].enabled = false;
+        }
+        shedCubeHistory = new List<int>();
     }
 
     private void Update()
     {
-        if (UIManager.Instance.currentScreen != GameScreen.Gameplay)
-            return;
-        rb.velocity = Vector3.Lerp(rb.velocity, transform.forward * speed, Time.deltaTime * 3f);
+        //if (UIManager.Instance.currentScreen != GameScreen.Gameplay)
+        //    return;
+        rb.velocity = Vector3.Lerp(rb.velocity, transform.forward * currentSpeed, Time.deltaTime * 2);
         if (Application.platform == RuntimePlatform.WindowsEditor)
         {
             transform.position = new Vector3(
@@ -47,14 +80,14 @@ public class Player : MonoBehaviour
         else if (Application.platform == RuntimePlatform.Android)
         {
             transform.position = new Vector3(
-                Mathf.Clamp(transform.position.x + touchInput() * touchMoveSensitivity, -sideBound, sideBound),
+                Mathf.Clamp(transform.position.x + inputTouch() * touchMoveSensitivity, -sideBound, sideBound),
                 transform.position.y,
                 transform.position.z);
         }
 
     }
 
-    public float touchInput()
+    public float inputTouch()
     {
         if (Input.touchCount > 0)
         {
@@ -73,5 +106,48 @@ public class Player : MonoBehaviour
                 return touch.deltaPosition.x;
         }
         return 0;
+    }
+
+    void explodeCube(int i)
+    {
+        subCubes[i].transform.SetParent(null);
+        subCubeRbs[i].isKinematic = false;
+        subCubeBcs[i].enabled = true;
+        subCubeRbs[i].AddForce(new Vector3(Random.Range(0.0f, 1.0f), 1, Random.Range(0.0f, 1.0f)) * 5, ForceMode.Impulse);
+    }
+
+    public void shedCube()
+    {
+        int decision;
+        bool found;
+        if (shedCubeHistory.Count < subCubes.Length / 2)
+        {
+            do
+            {
+                found = true;
+                //Topple off the top first
+                decision = Random.Range(subCubes.Length / 2, subCubes.Length);
+                foreach (int previouslySheddedCube in shedCubeHistory)
+                    if (previouslySheddedCube == decision)
+                        found = false;
+            } while (!found);
+            shedCubeHistory.Add(decision);
+            explodeCube(decision);
+        }
+        else
+            killMe();
+    }
+
+    public void killMe()
+    {
+        for (int i = 0; i < subCubes.Length; i++)
+            if (subCubes[i].transform.parent == transform)
+                explodeCube(i);
+        if (UIManager.Instance.currentScreen != GameScreen.End)
+        {
+            UIManager.Instance.levelEndReason.text = "TRY AGAIN!";
+            UIManager.Instance.screenFlyIn(GameScreen.End, 0.25f);
+        }
+        rb.isKinematic = true;
     }
 }
